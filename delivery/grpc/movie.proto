@@ -1,0 +1,25 @@
+syntax = "proto3";
+option go_package = "delivery/grpc";
+package grpc;
+
+service MovieHandler{
+  rpc Search(SearchRequest) returns (stream SearchResult);
+  rpc GetMovie(SingleRequest) returns (Movie);
+}
+message SearchRequest{
+  string SearchWord = 1;
+  string Pagination = 2;
+}
+message SearchResult{
+  repeated Movie Search = 1;
+}
+message SingleRequest{
+  string ImdbID = 1;
+}
+message Movie {
+  string Title = 1;
+  string Year = 2;
+  string ImdbID = 3;
+  string Type = 4;
+  string Poster = 5;
+}
