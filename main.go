@@ -13,7 +13,7 @@ import (
 	"net"
 )
 
-func main()  {
+func main() {
 	db := config.SetupDBConnection()
 	defer config.CloseDBConnection(db)
 
@@ -26,25 +26,12 @@ func main()  {
 
 	http.NewMovieController(r, externalService, internalService)
 
+	//start gRPC server
 	startGRPCServer(externalService, internalService)
+
+	//star http Rest API
 	r.Run(":8080")
-
-
 }
-
-//func (*server) search(ctx context.Context, r *movie.) (*basketBallPlayer.PlayerResponse, error) {
-//	id := r.GetId()
-//
-//	playerVal, found := c.Get(id)
-//	if found {
-//		player := playerVal.(basketBallPlayer.Player)
-//		return &basketBallPlayer.PlayerResponse{
-//			Result: &player,
-//		}, nil
-//	}
-//
-//	return nil, fmt.Errorf("could not find player with id: %v", id)
-//}
 
 func startGRPCServer(externalService external_service.ExternalService, internalService internal_service.InternalService) {
 	listener, err := net.Listen("tcp", ":9000")

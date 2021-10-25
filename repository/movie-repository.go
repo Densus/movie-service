@@ -7,7 +7,7 @@ import (
 
 type MovieRepository interface {
 	Log(movie entity.Movie) entity.Movie
-	GetByTitle(title string) []entity.Movie
+	GetByTitle(title string, offset int, limit int) []entity.Movie
 	GetByImdbID(imdbID string) entity.Movie
 }
 
@@ -26,15 +26,15 @@ func (m *movieRepository) Log(movie entity.Movie) entity.Movie {
 	return movie
 }
 
-func (m *movieRepository) GetByTitle(title string) []entity.Movie {
+func (m *movieRepository) GetByTitle(title string, offset int, limit int) []entity.Movie {
 	var movie []entity.Movie
-	_title := "%"+title+"%"
-	m.dbMovieConnection.Where("title LIKE ?", _title).Find(&movie)
+	_title := "%" + title + "%"
+	m.dbMovieConnection.Where("title LIKE ?", _title).Limit(limit).Offset((offset - 1) * limit).Order("id asc").Find(&movie)
 	return movie
 }
 
 func (m *movieRepository) GetByImdbID(imdbID string) entity.Movie {
 	var movie entity.Movie
-	m.dbMovieConnection.Find(&movie,"imdb_id = ?", imdbID)
+	m.dbMovieConnection.Find(&movie, "imdb_id = ?", imdbID)
 	return movie
 }

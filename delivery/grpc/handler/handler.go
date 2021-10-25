@@ -2,7 +2,6 @@ package handler
 
 import (
 	"context"
-	"fmt"
 	grpc2 "github.com/densus/movie_service/delivery/grpc"
 	"github.com/densus/movie_service/entity"
 	"github.com/densus/movie_service/entity/dto"
@@ -10,9 +9,11 @@ import (
 	internal_service "github.com/densus/movie_service/service/internal-service"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
+	"log"
+	"sync"
 )
 
-func NewMovieServerGrpc(gServer *grpc.Server, externalServ external_service.ExternalService, internalServ internal_service.InternalService)  {
+func NewMovieServerGrpc(gServer *grpc.Server, externalServ external_service.ExternalService, internalServ internal_service.InternalService) {
 	handler := &server{
 		externalService: externalServ,
 		internalService: internalServ,
@@ -28,13 +29,31 @@ type server struct {
 }
 
 func (s *server) Search(request *grpc2.SearchRequest, searchServer grpc2.MovieHandler_SearchServer) error {
-	//list := s.externalService.Search(request.GetSearchWord(), request.GetPagination())
-	//arrMovie := make([]*grpc2.SearchRequest, len(list.Search))
-	//for i, a := range list.Search {
-	//	ar := s.dTOToRPC(&a)
-	//	arrMovie[i] = ar
-	//}
-	fmt.Println("test")
+	//use wait group to allow process to be concurrent
+	var wg sync.WaitGroup
+	page := request.GetPagination()
+	list := s.externalService.Search(request.GetSearchWord(), int(page))
+
+	if list.Search == nil || len(list.Search) == 0 {
+		return nil
+	}
+
+	arrMovie := make([]*grpc2.Movie, len(list.Search))
+	for i, a := range list.Search {
+		wg.Add(i)
+		go func(int642 int64) {
+
+			defer wg.Done()
+			_dto := s.movieDtoToRPC(&a)
+			arrMovie = append(arrMovie, _dto)
+			resp := grpc2.SearchResult{Search: arrMovie}
+			if err := searchServer.Send(&resp); err != nil {
+				log.Printf("send error %v", err)
+			}
+		}(int64(i))
+	}
+
+	wg.Wait()
 	return nil
 }
 
@@ -56,7 +75,7 @@ func (s *server) movieToRPC(mv *entity.Movie) *grpc2.Movie {
 	return res
 }
 
-func (s *server) dTOToRPC(mv *dto.MovieDTO) *grpc2.Movie {
+func (s *server) movieDtoToRPC(mv *dto.MovieDTO) *grpc2.Movie {
 	res := &grpc2.Movie{
 		Title:  mv.Title,
 		Year:   mv.Year,
@@ -66,15 +85,3 @@ func (s *server) dTOToRPC(mv *dto.MovieDTO) *grpc2.Movie {
 	}
 	return res
 }
-
-func (s *server) rPCtoMovie(mv *grpc2.Movie) *entity.Movie {
-	res := &entity.Movie{
-		Title:  mv.Title,
-		Year:   mv.Year,
-		ImdbID: mv.ImdbID,
-		Type:   mv.Type,
-		Poster: mv.Poster,
-	}
-	return res
-}
-

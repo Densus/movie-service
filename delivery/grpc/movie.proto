@@ -8,7 +8,7 @@ service MovieHandler{
 }
 message SearchRequest{
   string SearchWord = 1;
-  string Pagination = 2;
+  int32 Pagination = 2;
 }
 message SearchResult{
   repeated Movie Search = 1;
