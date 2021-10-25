@@ -2,6 +2,7 @@ package external_service
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/densus/movie_service/entity"
 	"github.com/densus/movie_service/entity/dto"
 	"github.com/densus/movie_service/repository"
@@ -9,6 +10,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 )
 
 type ExternalService interface {
@@ -31,17 +33,20 @@ func (e *externalService) Search(search string, page int) dto.MovieResponse {
 
 	var dataFromDb []entity.Movie
 	dataFromDb = e.movieRepository.GetByTitle(search, page, 5)
-	if dataFromDb == nil {
+	fmt.Println(dataFromDb)
+	if len(dataFromDb) == 0 { //check if dataFromDb == []
 		url := os.Getenv("URL")
 		apiKey := "apikey=" + os.Getenv("API_KEY")
 		searchWord := "&s=" + search
-		pagination := "&page=" + string(page)
+		_page := strconv.Itoa(page)
+		pagination := "&page=" + _page
+		//pagination := "&page=" + string((page))
 
 		req, err := http.NewRequest("GET", url+apiKey+searchWord+pagination, nil)
 		if err != nil {
 			panic(err)
 		}
-		log.Println("Test: ", req)
+		//log.Println("Test: ", req)
 
 		res, err := client.Do(req)
 		if err != nil {
