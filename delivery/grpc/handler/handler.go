@@ -38,22 +38,25 @@ func (s *server) Search(request *grpc2.SearchRequest, searchServer grpc2.MovieHa
 		return nil
 	}
 
-	arrMovie := make([]*grpc2.Movie, len(list.Search))
+	arrMovie := make([]*grpc2.Movie, len(list.Search)) //make data type []*grpc2.Movie with a length of list.Search
 	for i, a := range list.Search {
+		//fmt.Println("a: ", a)
 		wg.Add(i)
+		a := a
 		go func(int642 int64) {
-
 			defer wg.Done()
+			//fmt.Println("i", i)
 			_dto := s.movieDtoToRPC(&a)
 			arrMovie = append(arrMovie, _dto)
 			resp := grpc2.SearchResult{Search: arrMovie}
+			//fmt.Println("resp: ", resp)
 			if err := searchServer.Send(&resp); err != nil {
 				log.Printf("send error %v", err)
 			}
 		}(int64(i))
 	}
 
-	wg.Wait()
+	wg.Wait() //
 	return nil
 }
 

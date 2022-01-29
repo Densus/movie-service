@@ -29,7 +29,8 @@ func (m *movieRepository) Log(movie entity.Movie) entity.Movie {
 func (m *movieRepository) GetByTitle(title string, offset int, limit int) []entity.Movie {
 	var movie []entity.Movie
 	_title := "%" + title + "%"
-	m.dbMovieConnection.Where("title LIKE ?", _title).Limit(limit).Offset((offset - 1) * limit).Order("id asc").Find(&movie)
+	m.dbMovieConnection.Debug().Where("title LIKE ?", _title).Limit(limit).Offset((offset - 1) * 1).Order("id asc").Find(&movie)
+	//fmt.Println("movie: ", movie)
 	return movie
 }
 

@@ -2,12 +2,10 @@ package external_service
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/densus/movie_service/entity"
 	"github.com/densus/movie_service/entity/dto"
 	"github.com/densus/movie_service/repository"
 	"github.com/mashingan/smapping"
-	"log"
 	"net/http"
 	"os"
 	"strconv"
@@ -32,8 +30,8 @@ func (e *externalService) Search(search string, page int) dto.MovieResponse {
 	var data dto.MovieResponse
 
 	var dataFromDb []entity.Movie
-	dataFromDb = e.movieRepository.GetByTitle(search, page, 5)
-	fmt.Println(dataFromDb)
+	dataFromDb = e.movieRepository.GetByTitle(search, page, 10)
+	//fmt.Println(dataFromDb)
 	if len(dataFromDb) == 0 { //check if dataFromDb == []
 		url := os.Getenv("URL")
 		apiKey := "apikey=" + os.Getenv("API_KEY")
@@ -46,14 +44,14 @@ func (e *externalService) Search(search string, page int) dto.MovieResponse {
 		if err != nil {
 			panic(err)
 		}
-		//log.Println("Test: ", req)
+		//fmt.Println("req: ", req)
 
 		res, err := client.Do(req)
 		if err != nil {
 			panic(err)
 		}
-		log.Println(res)
-		defer res.Body.Close()
+		//fmt.Println("res: ", res)
+		defer res.Body.Close() //handle resource leak and close connection, so the connection won't be re-used
 
 		err = json.NewDecoder(res.Body).Decode(&data)
 		if err != nil {
